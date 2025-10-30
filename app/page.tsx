@@ -1,14 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CSVUploader from './components/CSVUploader';
 import Sidebar from './components/Sidebar';
 import StatsView from './components/StatsView';
 import { CSVData } from './types/csv.types';
+import { saveToStorage, loadFromStorage, clearStorage } from './utils/storage';
 
 export default function Home() {
   const [csvData, setCsvData] = useState<CSVData | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // 初回マウント時にlocalStorageからデータを読み込み（クライアント側のみ）
+  useEffect(() => {
+    const savedData = loadFromStorage();
+    if (savedData) {
+      // localStorageからの初期データ読み込みのため、ここでのsetStateは問題なし
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCsvData(savedData);
+      if (savedData.headers.length > 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelectedColumn(savedData.headers[0]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsInitialized(true);
+  }, []);
+
+  // csvDataが変更されたらlocalStorageに保存（初期化後のみ）
+  useEffect(() => {
+    if (isInitialized && csvData) {
+      saveToStorage(csvData);
+    }
+  }, [csvData, isInitialized]);
 
   const handleUploadSuccess = (data: CSVData) => {
     setCsvData(data);
@@ -25,6 +50,7 @@ export default function Home() {
   const handleReset = () => {
     setCsvData(null);
     setSelectedColumn(null);
+    clearStorage();
   };
 
   return (
@@ -37,6 +63,9 @@ export default function Home() {
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
               CSVファイルをアップロードして統計情報を確認できます
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              ※ アップロードしたデータはブラウザに保存され、ページを閉じても保持されます
             </p>
           </header>
 
