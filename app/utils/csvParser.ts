@@ -59,7 +59,7 @@ export function parseCSV(file: File): Promise<CSVParseResult> {
         }
 
         // ヘッダー行の解析
-        const headers = parseCSVLine(lines[0]);
+        let headers = parseCSVLine(lines[0]);
 
         if (headers.length === 0) {
           resolve({
@@ -68,6 +68,14 @@ export function parseCSV(file: File): Promise<CSVParseResult> {
           });
           return;
         }
+
+        // 「希望家賃（管理費込）」を「希望家賃上限（管理費込）」に変更
+        headers = headers.map(header => {
+          if (header === '希望家賃（管理費込）') {
+            return '希望家賃上限（管理費込）';
+          }
+          return header;
+        });
 
         // データ行の解析
         const rows: Record<string, string | number>[] = [];
