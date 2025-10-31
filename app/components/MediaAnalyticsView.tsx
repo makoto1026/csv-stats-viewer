@@ -5,8 +5,11 @@ import { CSVData } from '../types/csv.types';
 import { DailyAdCost, MediaType, MEDIA_TYPES } from '../types/media.types';
 import DailyMediaInputTable from './DailyMediaInputTable';
 import MonthlyMediaReportView from './MonthlyMediaReportView';
+import AllTimeReportView from './AllTimeReportView';
+import DetailedAnalysisView from './DetailedAnalysisView';
 import { loadMediaAdCosts, saveMediaAdCosts } from '../utils/mediaAdStorage';
-import { getDailyLeadCounts, calculateMonthlyOverallReport } from '../utils/mediaAnalytics';
+import { getDailyLeadCounts, calculateMonthlyOverallReport, calculateAllTimeOverallReport } from '../utils/mediaAnalytics';
+import { calculateMediaDetailedAnalysis } from '../utils/detailedAnalytics';
 
 interface MediaAnalyticsViewProps {
   csvData: CSVData;
@@ -26,7 +29,8 @@ export default function MediaAnalyticsView({
   const [adCosts, setAdCosts] = useState<DailyAdCost[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [selectedMedia, setSelectedMedia] = useState<MediaType>('Instagram');
-  const [viewMode, setViewMode] = useState<'input' | 'report'>('input');
+  const [viewMode, setViewMode] = useState<'input' | 'report' | 'alltime' | 'analysis'>('input');
+  const [analysisTimeRange, setAnalysisTimeRange] = useState<'monthly' | 'alltime'>('monthly');
 
   // 初回マウント時にローカルストレージから読み込み
   useEffect(() => {
@@ -59,6 +63,22 @@ export default function MediaAnalyticsView({
     if (!selectedMonth) return null;
     return calculateMonthlyOverallReport(csvData, selectedMonth, dateColumn);
   }, [csvData, selectedMonth, dateColumn, adCosts]);
+
+  // 詳細分析を計算（月次）
+  const detailedAnalysis = useMemo(() => {
+    if (!selectedMonth) return null;
+    return calculateMediaDetailedAnalysis(csvData, selectedMedia, selectedMonth, dateColumn);
+  }, [csvData, selectedMedia, selectedMonth, dateColumn]);
+
+  // 詳細分析を計算（全期間）
+  const allTimeDetailedAnalysis = useMemo(() => {
+    return calculateMediaDetailedAnalysis(csvData, selectedMedia, 'all-time', dateColumn);
+  }, [csvData, selectedMedia, dateColumn]);
+
+  // 全期間レポートを計算
+  const allTimeReport = useMemo(() => {
+    return calculateAllTimeOverallReport(csvData, dateColumn);
+  }, [csvData, dateColumn, adCosts]);
 
   // 保存ハンドラ
   const handleSave = (newAdCosts: DailyAdCost[]) => {
@@ -115,7 +135,7 @@ export default function MediaAnalyticsView({
         <>
           {/* 表示モード切り替え */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setViewMode('input')}
                 className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
@@ -135,6 +155,26 @@ export default function MediaAnalyticsView({
                 }`}
               >
                 月次レポート
+              </button>
+              <button
+                onClick={() => setViewMode('alltime')}
+                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
+                  viewMode === 'alltime'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                全期間レポート
+              </button>
+              <button
+                onClick={() => setViewMode('analysis')}
+                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
+                  viewMode === 'analysis'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                詳細分析
               </button>
             </div>
           </div>
@@ -175,6 +215,69 @@ export default function MediaAnalyticsView({
           {/* 月次レポートモード */}
           {viewMode === 'report' && monthlyReport && (
             <MonthlyMediaReportView report={monthlyReport} />
+          )}
+
+          {/* 全期間レポートモード */}
+          {viewMode === 'alltime' && (
+            <AllTimeReportView report={allTimeReport} />
+          )}
+
+          {/* 詳細分析モード */}
+          {viewMode === 'analysis' && (
+            <>
+              {/* 媒体タブ */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                <div className="flex flex-wrap gap-2">
+                  {MEDIA_TYPES.map((media) => (
+                    <button
+                      key={media}
+                      onClick={() => setSelectedMedia(media)}
+                      className={`px-4 py-2 rounded-lg transition-colors cursor-pointer text-sm ${
+                        selectedMedia === media
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {media}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 期間切り替え */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setAnalysisTimeRange('monthly')}
+                    className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
+                      analysisTimeRange === 'monthly'
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    月次データ
+                  </button>
+                  <button
+                    onClick={() => setAnalysisTimeRange('alltime')}
+                    className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
+                      analysisTimeRange === 'alltime'
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    全期間データ
+                  </button>
+                </div>
+              </div>
+
+              {/* 詳細分析ビュー */}
+              {analysisTimeRange === 'monthly' && detailedAnalysis && (
+                <DetailedAnalysisView analysis={detailedAnalysis} />
+              )}
+              {analysisTimeRange === 'alltime' && (
+                <DetailedAnalysisView analysis={allTimeDetailedAnalysis} />
+              )}
+            </>
           )}
         </>
       )}

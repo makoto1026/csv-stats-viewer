@@ -4,28 +4,21 @@ import { useState, useEffect, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import StatsView from './components/StatsView';
 import DateFilterPanel from './components/DateFilterPanel';
-import AdCostInput from './components/AdCostInput';
-import AdPerformanceView from './components/AdPerformanceView';
 import MediaAnalyticsView from './components/MediaAnalyticsView';
 import { CSVData } from './types/csv.types';
 import { DateFilter } from './types/filter.types';
-import { AdCost } from './types/advertisement.types';
 import {
   detectDateColumn,
   filterDataByPeriod,
   getAvailableMonths,
   getDateRange,
 } from './utils/dateFilter';
-import { loadAdCosts, saveAdCosts, removeAdCost } from './utils/adCostStorage';
-import { calculateAdPerformance, calculateTotalAdPerformance } from './utils/adPerformance';
 import { loadFromGoogleSheets } from './utils/sheetsLoader';
 
 export default function Home() {
   const [csvData, setCsvData] = useState<CSVData | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<DateFilter>({ period: 'all' });
-  const [adCosts, setAdCosts] = useState<AdCost[]>([]);
-  const [showAdCostPanel, setShowAdCostPanel] = useState(false);
   const [showMediaAnalytics, setShowMediaAnalytics] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,27 +43,16 @@ export default function Home() {
   // 初回マウント時にスプレッドシートからデータを読み込み
   useEffect(() => {
     loadData();
-    // 広告費用データを読み込み
-    setAdCosts(loadAdCosts());
   }, []);
 
   const handleSelectColumn = (column: string) => {
     setSelectedColumn(column);
+    // サイドバークリック時にパネルを閉じる
+    setShowMediaAnalytics(false);
   };
 
   const handleReload = () => {
     loadData();
-  };
-
-  const handleAddAdCost = (adCost: AdCost) => {
-    const newAdCosts = [...adCosts, adCost];
-    setAdCosts(newAdCosts);
-    saveAdCosts(newAdCosts);
-  };
-
-  const handleRemoveAdCost = (id: string) => {
-    removeAdCost(id);
-    setAdCosts(loadAdCosts());
   };
 
   // 日付カラムの検出
@@ -95,18 +77,6 @@ export default function Home() {
     if (!csvData || !dateColumn) return null;
     return getDateRange(csvData, dateColumn);
   }, [csvData, dateColumn]);
-
-  // 広告費用パフォーマンス
-  const adPerformances = useMemo(() => {
-    if (!csvData || !dateColumn || adCosts.length === 0) return [];
-    return adCosts.map(adCost => calculateAdPerformance(csvData, dateColumn, adCost));
-  }, [csvData, dateColumn, adCosts]);
-
-  // 合計パフォーマンス
-  const totalAdPerformance = useMemo(() => {
-    if (!csvData || !dateColumn || adCosts.length === 0) return null;
-    return calculateTotalAdPerformance(csvData, dateColumn, adCosts);
-  }, [csvData, dateColumn, adCosts]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -164,34 +134,18 @@ export default function Home() {
               </div>
               <div className="flex gap-2">
                 {dateColumn && (
-                  <>
-                    <button
-                      onClick={() => {
-                        setShowMediaAnalytics(!showMediaAnalytics);
-                        setShowAdCostPanel(false);
-                      }}
-                      className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                        showMediaAnalytics
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                      }`}
-                    >
-                      媒体別分析
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowAdCostPanel(!showAdCostPanel);
-                        setShowMediaAnalytics(false);
-                      }}
-                      className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                        showAdCostPanel
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                      }`}
-                    >
-                      広告費用対効果（旧）
-                    </button>
-                  </>
+                  <button
+                    onClick={() => {
+                      setShowMediaAnalytics(!showMediaAnalytics);
+                    }}
+                    className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
+                      showMediaAnalytics
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    媒体別分析
+                  </button>
                 )}
                 <button
                   onClick={handleReload}
@@ -225,39 +179,8 @@ export default function Home() {
                   />
                 )}
 
-                {/* 広告費用対効果パネル（旧） */}
-                {showAdCostPanel && dateColumn && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        広告費用対効果（旧）
-                      </h2>
-                      <button
-                        onClick={() => setShowAdCostPanel(false)}
-                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    </div>
-
-                    <AdCostInput
-                      onAdd={handleAddAdCost}
-                      availableMonths={availableMonths}
-                      minDate={dateRange?.min}
-                      maxDate={dateRange?.max}
-                    />
-
-                    <AdPerformanceView
-                      adCosts={adCosts}
-                      performances={adPerformances}
-                      totalPerformance={totalAdPerformance}
-                      onRemove={handleRemoveAdCost}
-                    />
-                  </div>
-                )}
-
                 {/* 期間フィルター */}
-                {!showAdCostPanel && !showMediaAnalytics && dateColumn && (
+                {!showMediaAnalytics && dateColumn && (
                   <DateFilterPanel
                     filter={dateFilter}
                     availableMonths={availableMonths}
@@ -268,7 +191,7 @@ export default function Home() {
                 )}
 
                 {/* 統計ビュー */}
-                {!showAdCostPanel && !showMediaAnalytics && selectedColumn && filteredData && (
+                {!showMediaAnalytics && selectedColumn && filteredData && (
                   <StatsView data={filteredData} selectedColumn={selectedColumn} />
                 )}
               </div>

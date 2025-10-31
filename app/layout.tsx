@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CSV統計ビューア",
-  description: "CSVファイルをアップロードして統計情報を確認できるアプリケーション",
+  title: "賃貸フォーム回答統計",
+  description: "賃貸フォームの回答を集計・可視化するアプリケーションです。",
 };
 
 export default function RootLayout({

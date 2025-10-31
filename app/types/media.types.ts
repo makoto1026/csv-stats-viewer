@@ -51,3 +51,30 @@ export interface MonthlyOverallReport {
   overallCostPerLead: number;
   overallCostPerContract: number;
 }
+
+// 全期間の媒体別レポート
+export interface AllTimeMediaReport {
+  mediaType: MediaType;
+  leadCount: number; // 全期間のリード数
+  totalAdCost: number; // 全期間の広告費用合計
+  totalContractCount: number; // 全期間の成約数合計
+  contractRate: number; // 成約率
+  costPerLead: number; // リード1件あたりのコスト
+  costPerContract: number; // 成約1件あたりのコスト
+  monthCount: number; // データがある月数
+}
+
+// 全期間の全媒体サマリー
+export interface AllTimeOverallReport {
+  mediaReports: AllTimeMediaReport[];
+  totalLeadCount: number;
+  totalAdCost: number;
+  totalContractCount: number;
+  overallContractRate: number;
+  overallCostPerLead: number;
+  overallCostPerContract: number;
+  dateRange: {
+    start: string; // YYYY-MM-DD
+    end: string; // YYYY-MM-DD
+  };
+}

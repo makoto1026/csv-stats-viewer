@@ -1,6 +1,14 @@
 import { CSVData } from '../types/csv.types';
-import { MediaType, MEDIA_TYPES, MonthlyMediaReport, MonthlyOverallReport, DailyAdCost } from '../types/media.types';
-import { getMediaAdCostsByMonthAndType } from './mediaAdStorage';
+import {
+  MediaType,
+  MEDIA_TYPES,
+  MonthlyMediaReport,
+  MonthlyOverallReport,
+  DailyAdCost,
+  AllTimeMediaReport,
+  AllTimeOverallReport
+} from '../types/media.types';
+import { getMediaAdCostsByMonthAndType, loadMediaAdCosts } from './mediaAdStorage';
 
 /**
  * 日別・媒体別のリード数を集計
@@ -218,4 +226,111 @@ export function normalizeMediaName(value: string): MediaType | null {
   if (lowerValue.includes('classy') || lowerValue.includes('雑誌')) return 'CLASSY(雑誌)';
 
   return null;
+}
+
+/**
+ * 全期間の媒体別リード数をカウント
+ */
+export function countAllTimeLeadsByMedia(
+  csvData: CSVData,
+  mediaType: MediaType,
+  mediaColumn: string = '何を見て知った？'
+): number {
+  let count = 0;
+
+  for (const row of csvData.rows) {
+    const mediaValue = row[mediaColumn];
+    const normalizedMedia = normalizeMediaName(String(mediaValue));
+    if (normalizedMedia === mediaType) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+/**
+ * 全期間の媒体別レポートを計算
+ */
+export function calculateAllTimeMediaReport(
+  csvData: CSVData,
+  mediaType: MediaType,
+  mediaColumn: string = '何を見て知った？'
+): AllTimeMediaReport {
+  // 全期間のリード数を集計
+  const leadCount = countAllTimeLeadsByMedia(csvData, mediaType, mediaColumn);
+
+  // ローカルストレージから全期間の広告費用データを取得
+  const allAdCosts = loadMediaAdCosts();
+  const mediaAdCosts = allAdCosts.filter(cost => cost.mediaType === mediaType);
+
+  // 広告費用と成約数を集計
+  const totalAdCost = mediaAdCosts.reduce((sum, cost) => sum + cost.cost, 0);
+  const totalContractCount = mediaAdCosts.reduce((sum, cost) => sum + cost.contractCount, 0);
+
+  // データがある月数を計算
+  const uniqueMonths = new Set(mediaAdCosts.map(cost => cost.date.substring(0, 7))); // YYYY-MM
+  const monthCount = uniqueMonths.size;
+
+  // 計算値
+  const contractRate = leadCount > 0 ? (totalContractCount / leadCount) * 100 : 0;
+  const costPerLead = leadCount > 0 ? totalAdCost / leadCount : 0;
+  const costPerContract = totalContractCount > 0 ? totalAdCost / totalContractCount : 0;
+
+  return {
+    mediaType,
+    leadCount,
+    totalAdCost,
+    totalContractCount,
+    contractRate,
+    costPerLead,
+    costPerContract,
+    monthCount,
+  };
+}
+
+/**
+ * 全期間の全媒体レポートを計算
+ */
+export function calculateAllTimeOverallReport(
+  csvData: CSVData,
+  dateColumn: string,
+  mediaColumn: string = '何を見て知った？'
+): AllTimeOverallReport {
+  const mediaReports: AllTimeMediaReport[] = MEDIA_TYPES.map(mediaType =>
+    calculateAllTimeMediaReport(csvData, mediaType, mediaColumn)
+  );
+
+  // 合計値を計算
+  const totalLeadCount = mediaReports.reduce((sum, report) => sum + report.leadCount, 0);
+  const totalAdCost = mediaReports.reduce((sum, report) => sum + report.totalAdCost, 0);
+  const totalContractCount = mediaReports.reduce((sum, report) => sum + report.totalContractCount, 0);
+
+  // 全体の計算値
+  const overallContractRate = totalLeadCount > 0 ? (totalContractCount / totalLeadCount) * 100 : 0;
+  const overallCostPerLead = totalLeadCount > 0 ? totalAdCost / totalLeadCount : 0;
+  const overallCostPerContract = totalContractCount > 0 ? totalAdCost / totalContractCount : 0;
+
+  // データの日付範囲を取得
+  const allDates = csvData.rows
+    .map(row => row[dateColumn])
+    .filter((val): val is string => typeof val === 'string')
+    .map(dateValue => dateValue.split(' ')[0]); // "2024-11-02" 形式に変換
+
+  const sortedDates = allDates.sort();
+  const dateRange = {
+    start: sortedDates[0] || '',
+    end: sortedDates[sortedDates.length - 1] || '',
+  };
+
+  return {
+    mediaReports,
+    totalLeadCount,
+    totalAdCost,
+    totalContractCount,
+    overallContractRate,
+    overallCostPerLead,
+    overallCostPerContract,
+    dateRange,
+  };
 }
