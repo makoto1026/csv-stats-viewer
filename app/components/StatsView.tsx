@@ -75,7 +75,7 @@ export default function StatsView({ data, selectedColumn }: StatsViewProps) {
             <div className="mb-4 flex gap-2">
               <button
                 onClick={() => setDateTimeViewMode('table')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
                   dateTimeViewMode === 'table'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
@@ -85,7 +85,7 @@ export default function StatsView({ data, selectedColumn }: StatsViewProps) {
               </button>
               <button
                 onClick={() => setDateTimeViewMode('chart')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
                   dateTimeViewMode === 'chart'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
@@ -198,7 +198,7 @@ export default function StatsView({ data, selectedColumn }: StatsViewProps) {
             <div className="flex gap-2">
               <button
                 onClick={() => setDistributionViewMode('table')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
                   distributionViewMode === 'table'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
@@ -208,7 +208,7 @@ export default function StatsView({ data, selectedColumn }: StatsViewProps) {
               </button>
               <button
                 onClick={() => setDistributionViewMode('chart')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
                   distributionViewMode === 'chart'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'

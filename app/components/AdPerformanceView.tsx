@@ -135,7 +135,7 @@ export default function AdPerformanceView({
                   </div>
                   <button
                     onClick={() => onRemove(adCost.id)}
-                    className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
+                    className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium cursor-pointer"
                   >
                     削除
                   </button>

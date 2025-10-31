@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import CSVUploader from './components/CSVUploader';
 import Sidebar from './components/Sidebar';
 import StatsView from './components/StatsView';
 import DateFilterPanel from './components/DateFilterPanel';
@@ -10,7 +9,6 @@ import AdPerformanceView from './components/AdPerformanceView';
 import { CSVData } from './types/csv.types';
 import { DateFilter } from './types/filter.types';
 import { AdCost } from './types/advertisement.types';
-import { saveToStorage, loadFromStorage, clearStorage } from './utils/storage';
 import {
   detectDateColumn,
   filterDataByPeriod,
@@ -19,60 +17,47 @@ import {
 } from './utils/dateFilter';
 import { loadAdCosts, saveAdCosts, removeAdCost } from './utils/adCostStorage';
 import { calculateAdPerformance, calculateTotalAdPerformance } from './utils/adPerformance';
+import { loadFromGoogleSheets } from './utils/sheetsLoader';
 
 export default function Home() {
   const [csvData, setCsvData] = useState<CSVData | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [dateFilter, setDateFilter] = useState<DateFilter>({ period: 'all' });
   const [adCosts, setAdCosts] = useState<AdCost[]>([]);
   const [showAdCostPanel, setShowAdCostPanel] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 初回マウント時にlocalStorageからデータを読み込み（クライアント側のみ）
-  useEffect(() => {
-    const savedData = loadFromStorage();
-    if (savedData) {
-      // localStorageからの初期データ読み込みのため、ここでのsetStateは問題なし
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCsvData(savedData);
-      if (savedData.headers.length > 0) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setSelectedColumn(savedData.headers[0]);
+  // Googleスプレッドシートからデータを読み込む
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await loadFromGoogleSheets();
+      setCsvData(data);
+      if (data.headers.length > 0) {
+        setSelectedColumn(data.headers[0]);
       }
-    }
-
-    // 広告費用データを読み込み
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAdCosts(loadAdCosts());
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsInitialized(true);
-  }, []);
-
-  // csvDataが変更されたらlocalStorageに保存（初期化後のみ）
-  useEffect(() => {
-    if (isInitialized && csvData) {
-      saveToStorage(csvData);
-    }
-  }, [csvData, isInitialized]);
-
-  const handleUploadSuccess = (data: CSVData) => {
-    setCsvData(data);
-    // 最初のカラムをデフォルトで選択
-    if (data.headers.length > 0) {
-      setSelectedColumn(data.headers[0]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'データの読み込みに失敗しました');
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // 初回マウント時にスプレッドシートからデータを読み込み
+  useEffect(() => {
+    loadData();
+    // 広告費用データを読み込み
+    setAdCosts(loadAdCosts());
+  }, []);
 
   const handleSelectColumn = (column: string) => {
     setSelectedColumn(column);
   };
 
-  const handleReset = () => {
-    setCsvData(null);
-    setSelectedColumn(null);
-    setDateFilter({ period: 'all' });
-    clearStorage();
+  const handleReload = () => {
+    loadData();
   };
 
   const handleAddAdCost = (adCost: AdCost) => {
@@ -123,25 +108,35 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {!csvData ? (
+      {isLoading ? (
         <div className="container mx-auto px-4 py-8">
-          <header className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              CSV統計ビューア
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              CSVファイルをアップロードして統計情報を確認できます
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-              ※ アップロードしたデータはブラウザに保存され、ページを閉じても保持されます
-            </p>
-          </header>
-
           <div className="flex items-center justify-center min-h-[60vh]">
-            <CSVUploader onUploadSuccess={handleUploadSuccess} />
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">データを読み込み中...</p>
+            </div>
           </div>
         </div>
-      ) : (
+      ) : error ? (
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center max-w-md">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
+                  エラーが発生しました
+                </h2>
+                <p className="text-gray-700 dark:text-gray-300 mb-4">{error}</p>
+                <button
+                  onClick={handleReload}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+                >
+                  再読み込み
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : csvData ? (
         <div className="h-screen flex flex-col">
           {/* ヘッダー */}
           <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
@@ -169,7 +164,7 @@ export default function Home() {
                 {dateColumn && (
                   <button
                     onClick={() => setShowAdCostPanel(!showAdCostPanel)}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
+                    className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
                       showAdCostPanel
                         ? 'bg-blue-500 text-white'
                         : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
@@ -179,10 +174,11 @@ export default function Home() {
                   </button>
                 )}
                 <button
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  onClick={handleReload}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  別のファイルを選択
+                  {isLoading ? '読み込み中...' : '再読み込み'}
                 </button>
               </div>
             </div>
@@ -207,7 +203,7 @@ export default function Home() {
                       </h2>
                       <button
                         onClick={() => setShowAdCostPanel(false)}
-                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer"
                       >
                         ✕
                       </button>
@@ -215,6 +211,7 @@ export default function Home() {
 
                     <AdCostInput
                       onAdd={handleAddAdCost}
+                      availableMonths={availableMonths}
                       minDate={dateRange?.min}
                       maxDate={dateRange?.max}
                     />
@@ -247,7 +244,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

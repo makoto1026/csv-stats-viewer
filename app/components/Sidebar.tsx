@@ -28,7 +28,7 @@ export default function Sidebar({
             key={header}
             onClick={() => onSelectColumn(header)}
             className={`
-              w-full text-left px-3 py-2 rounded-lg mb-1 transition-colors
+              w-full text-left px-3 py-2 rounded-lg mb-1 transition-colors cursor-pointer
               ${
                 selectedColumn === header
                   ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-medium'
