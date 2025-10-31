@@ -1,16 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import CSVUploader from './components/CSVUploader';
 import Sidebar from './components/Sidebar';
 import StatsView from './components/StatsView';
+import DateFilterPanel from './components/DateFilterPanel';
 import { CSVData } from './types/csv.types';
+import { DateFilter } from './types/filter.types';
 import { saveToStorage, loadFromStorage, clearStorage } from './utils/storage';
+import {
+  detectDateColumn,
+  filterDataByPeriod,
+  getAvailableMonths,
+  getDateRange,
+} from './utils/dateFilter';
 
 export default function Home() {
   const [csvData, setCsvData] = useState<CSVData | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [dateFilter, setDateFilter] = useState<DateFilter>({ period: 'all' });
 
   // 初回マウント時にlocalStorageからデータを読み込み（クライアント側のみ）
   useEffect(() => {
@@ -50,8 +59,32 @@ export default function Home() {
   const handleReset = () => {
     setCsvData(null);
     setSelectedColumn(null);
+    setDateFilter({ period: 'all' });
     clearStorage();
   };
+
+  // 日付カラムの検出
+  const dateColumn = useMemo(() => {
+    return csvData ? detectDateColumn(csvData) : null;
+  }, [csvData]);
+
+  // フィルタリングされたデータ
+  const filteredData = useMemo(() => {
+    if (!csvData || !dateColumn) return csvData;
+    return filterDataByPeriod(csvData, dateColumn, dateFilter);
+  }, [csvData, dateColumn, dateFilter]);
+
+  // 利用可能な月のリスト
+  const availableMonths = useMemo(() => {
+    if (!csvData || !dateColumn) return [];
+    return getAvailableMonths(csvData, dateColumn);
+  }, [csvData, dateColumn]);
+
+  // 日付範囲
+  const dateRange = useMemo(() => {
+    if (!csvData || !dateColumn) return null;
+    return getDateRange(csvData, dateColumn);
+  }, [csvData, dateColumn]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -83,11 +116,18 @@ export default function Home() {
                   {csvData.fileName}
                 </h1>
                 <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  <span>データ行数: {csvData.rows.length.toLocaleString()}</span>
+                  <span>
+                    データ行数: {filteredData?.rows.length.toLocaleString() || 0} / {csvData.rows.length.toLocaleString()}
+                  </span>
                   <span>カラム数: {csvData.headers.length}</span>
                   <span>
                     アップロード: {csvData.uploadedAt.toLocaleString('ja-JP')}
                   </span>
+                  {dateColumn && (
+                    <span className="text-blue-600 dark:text-blue-400">
+                      期間フィルター: 有効
+                    </span>
+                  )}
                 </div>
               </div>
               <button
@@ -107,9 +147,25 @@ export default function Home() {
               onSelectColumn={handleSelectColumn}
             />
 
-            {selectedColumn && (
-              <StatsView data={csvData} selectedColumn={selectedColumn} />
-            )}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="max-w-6xl mx-auto space-y-6">
+                {/* 期間フィルター */}
+                {dateColumn && (
+                  <DateFilterPanel
+                    filter={dateFilter}
+                    availableMonths={availableMonths}
+                    onFilterChange={setDateFilter}
+                    minDate={dateRange?.min}
+                    maxDate={dateRange?.max}
+                  />
+                )}
+
+                {/* 統計ビュー */}
+                {selectedColumn && filteredData && (
+                  <StatsView data={filteredData} selectedColumn={selectedColumn} />
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
