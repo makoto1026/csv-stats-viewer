@@ -3,7 +3,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface ValueDistributionChartProps {
-  data: Array<{ value: string; count: number; percentage: number }>;
+  data: Array<{ value: string | number; count: number; percentage: number }>;
   title: string;
 }
 
