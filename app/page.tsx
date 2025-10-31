@@ -6,6 +6,7 @@ import StatsView from './components/StatsView';
 import DateFilterPanel from './components/DateFilterPanel';
 import AdCostInput from './components/AdCostInput';
 import AdPerformanceView from './components/AdPerformanceView';
+import MediaAnalyticsView from './components/MediaAnalyticsView';
 import { CSVData } from './types/csv.types';
 import { DateFilter } from './types/filter.types';
 import { AdCost } from './types/advertisement.types';
@@ -25,6 +26,7 @@ export default function Home() {
   const [dateFilter, setDateFilter] = useState<DateFilter>({ period: 'all' });
   const [adCosts, setAdCosts] = useState<AdCost[]>([]);
   const [showAdCostPanel, setShowAdCostPanel] = useState(false);
+  const [showMediaAnalytics, setShowMediaAnalytics] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -162,16 +164,34 @@ export default function Home() {
               </div>
               <div className="flex gap-2">
                 {dateColumn && (
-                  <button
-                    onClick={() => setShowAdCostPanel(!showAdCostPanel)}
-                    className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                      showAdCostPanel
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    広告費用対効果
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowMediaAnalytics(!showMediaAnalytics);
+                        setShowAdCostPanel(false);
+                      }}
+                      className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
+                        showMediaAnalytics
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      媒体別分析
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAdCostPanel(!showAdCostPanel);
+                        setShowMediaAnalytics(false);
+                      }}
+                      className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
+                        showAdCostPanel
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      広告費用対効果（旧）
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={handleReload}
@@ -194,12 +214,23 @@ export default function Home() {
 
             <div className="flex-1 overflow-y-auto p-6">
               <div className="max-w-6xl mx-auto space-y-6">
-                {/* 広告費用対効果パネル */}
+                {/* 媒体別分析パネル */}
+                {showMediaAnalytics && dateColumn && csvData && (
+                  <MediaAnalyticsView
+                    csvData={csvData}
+                    dateColumn={dateColumn}
+                    availableMonths={availableMonths}
+                    minDate={dateRange?.min}
+                    maxDate={dateRange?.max}
+                  />
+                )}
+
+                {/* 広告費用対効果パネル（旧） */}
                 {showAdCostPanel && dateColumn && (
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        広告費用対効果
+                        広告費用対効果（旧）
                       </h2>
                       <button
                         onClick={() => setShowAdCostPanel(false)}
@@ -226,7 +257,7 @@ export default function Home() {
                 )}
 
                 {/* 期間フィルター */}
-                {!showAdCostPanel && dateColumn && (
+                {!showAdCostPanel && !showMediaAnalytics && dateColumn && (
                   <DateFilterPanel
                     filter={dateFilter}
                     availableMonths={availableMonths}
@@ -237,7 +268,7 @@ export default function Home() {
                 )}
 
                 {/* 統計ビュー */}
-                {!showAdCostPanel && selectedColumn && filteredData && (
+                {!showAdCostPanel && !showMediaAnalytics && selectedColumn && filteredData && (
                   <StatsView data={filteredData} selectedColumn={selectedColumn} />
                 )}
               </div>
