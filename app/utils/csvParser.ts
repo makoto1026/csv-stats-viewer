@@ -1,4 +1,5 @@
 import { CSVData, CSVParseResult } from '../types/csv.types';
+import { normalizeRentInData } from './rentNormalizer';
 
 export function parseCSV(file: File): Promise<CSVParseResult> {
   return new Promise((resolve) => {
@@ -107,9 +108,12 @@ export function parseCSV(file: File): Promise<CSVParseResult> {
           console.warn('CSV解析の警告:\n' + warnings.join('\n'));
         }
 
+        // 希望家賃カラムを正規化
+        const normalizedRows = normalizeRentInData(rows, headers);
+
         const csvData: CSVData = {
           headers,
-          rows,
+          rows: normalizedRows,
           fileName: file.name,
           uploadedAt: new Date(),
         };
