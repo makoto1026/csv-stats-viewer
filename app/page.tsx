@@ -6,6 +6,7 @@ import StatsView from './components/StatsView';
 import DateFilterPanel from './components/DateFilterPanel';
 import MediaAnalyticsView from './components/MediaAnalyticsView';
 import ResponseAnalyticsView from './components/ResponseAnalyticsView';
+import RentOverviewView from './components/RentOverviewView';
 import { SpreadsheetData } from './types/spreadsheet.types';
 import { DateFilter } from './types/filter.types';
 import {
@@ -22,6 +23,7 @@ export default function Home() {
   const [dateFilter, setDateFilter] = useState<DateFilter>({ period: 'all' });
   const [showMediaAnalytics, setShowMediaAnalytics] = useState(false);
   const [showResponseAnalytics, setShowResponseAnalytics] = useState(false);
+  const [showRentOverview, setShowRentOverview] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,6 +54,7 @@ export default function Home() {
     // サイドバークリック時にパネルを閉じる
     setShowMediaAnalytics(false);
     setShowResponseAnalytics(false);
+    setShowRentOverview(false);
   };
 
   const handleReload = () => {
@@ -142,6 +145,7 @@ export default function Home() {
                       onClick={() => {
                         setShowMediaAnalytics(!showMediaAnalytics);
                         setShowResponseAnalytics(false);
+                        setShowRentOverview(false);
                       }}
                       className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
                         showMediaAnalytics
@@ -155,6 +159,7 @@ export default function Home() {
                       onClick={() => {
                         setShowResponseAnalytics(!showResponseAnalytics);
                         setShowMediaAnalytics(false);
+                        setShowRentOverview(false);
                       }}
                       className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
                         showResponseAnalytics
@@ -163,6 +168,20 @@ export default function Home() {
                       }`}
                     >
                       回答数分析
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowRentOverview(!showRentOverview);
+                        setShowMediaAnalytics(false);
+                        setShowResponseAnalytics(false);
+                      }}
+                      className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
+                        showRentOverview
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      希望家賃上限分析
                     </button>
                   </>
                 )}
@@ -178,52 +197,59 @@ export default function Home() {
           </header>
 
           {/* メインコンテンツ */}
-          <div className="flex flex-1 overflow-hidden">
-            <Sidebar
-              headers={spreadsheetData.headers}
-              selectedColumn={selectedColumn}
-              onSelectColumn={handleSelectColumn}
+          {showRentOverview && spreadsheetData && dateColumn ? (
+            <RentOverviewView
+              csvData={spreadsheetData}
+              onClose={() => setShowRentOverview(false)}
             />
+          ) : (
+            <div className="flex flex-1 overflow-hidden">
+              <Sidebar
+                headers={spreadsheetData.headers}
+                selectedColumn={selectedColumn}
+                onSelectColumn={handleSelectColumn}
+              />
 
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="max-w-6xl mx-auto space-y-6">
-                {/* 媒体別分析パネル */}
-                {showMediaAnalytics && dateColumn && spreadsheetData && (
-                  <MediaAnalyticsView
-                    csvData={spreadsheetData}
-                    dateColumn={dateColumn}
-                    availableMonths={availableMonths}
-                    minDate={dateRange?.min}
-                    maxDate={dateRange?.max}
-                  />
-                )}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="max-w-6xl mx-auto space-y-6">
+                  {/* 媒体別分析パネル */}
+                  {showMediaAnalytics && dateColumn && spreadsheetData && (
+                    <MediaAnalyticsView
+                      csvData={spreadsheetData}
+                      dateColumn={dateColumn}
+                      availableMonths={availableMonths}
+                      minDate={dateRange?.min}
+                      maxDate={dateRange?.max}
+                    />
+                  )}
 
-                {/* 回答数分析パネル */}
-                {showResponseAnalytics && dateColumn && spreadsheetData && (
-                  <ResponseAnalyticsView
-                    csvData={spreadsheetData}
-                    dateColumn={dateColumn}
-                  />
-                )}
+                  {/* 回答数分析パネル */}
+                  {showResponseAnalytics && dateColumn && spreadsheetData && (
+                    <ResponseAnalyticsView
+                      csvData={spreadsheetData}
+                      dateColumn={dateColumn}
+                    />
+                  )}
 
-                {/* 期間フィルター */}
-                {!showMediaAnalytics && !showResponseAnalytics && dateColumn && (
-                  <DateFilterPanel
-                    filter={dateFilter}
-                    availableMonths={availableMonths}
-                    onFilterChange={setDateFilter}
-                    minDate={dateRange?.min}
-                    maxDate={dateRange?.max}
-                  />
-                )}
+                  {/* 期間フィルター */}
+                  {!showMediaAnalytics && !showResponseAnalytics && dateColumn && (
+                    <DateFilterPanel
+                      filter={dateFilter}
+                      availableMonths={availableMonths}
+                      onFilterChange={setDateFilter}
+                      minDate={dateRange?.min}
+                      maxDate={dateRange?.max}
+                    />
+                  )}
 
-                {/* 統計ビュー */}
-                {!showMediaAnalytics && !showResponseAnalytics && selectedColumn && filteredData && (
-                  <StatsView data={filteredData} selectedColumn={selectedColumn} />
-                )}
+                  {/* 統計ビュー */}
+                  {!showMediaAnalytics && !showResponseAnalytics && selectedColumn && filteredData && (
+                    <StatsView data={filteredData} selectedColumn={selectedColumn} />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       ) : null}
     </div>
