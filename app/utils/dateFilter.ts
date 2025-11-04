@@ -1,10 +1,10 @@
-import { CSVData } from '../types/csv.types';
+import { SpreadsheetData } from '../types/spreadsheet.types';
 import { DateFilter } from '../types/filter.types';
 
 /**
  * 日時型のカラムを検出
  */
-export function detectDateColumn(data: CSVData): string | null {
+export function detectDateColumn(data: SpreadsheetData): string | null {
   for (const header of data.headers) {
     // ヘッダー名に「日時」「日付」が含まれるか確認
     if (header.includes('日時') || header.includes('日付') || header.toLowerCase().includes('date')) {
@@ -34,10 +34,10 @@ export function detectDateColumn(data: CSVData): string | null {
  * データを期間でフィルタリング
  */
 export function filterDataByPeriod(
-  data: CSVData,
+  data: SpreadsheetData,
   dateColumn: string,
   filter: DateFilter
-): CSVData {
+): SpreadsheetData {
   if (filter.period === 'all') {
     return data;
   }
@@ -77,7 +77,7 @@ export function filterDataByPeriod(
 /**
  * データから利用可能な月のリストを取得
  */
-export function getAvailableMonths(data: CSVData, dateColumn: string): string[] {
+export function getAvailableMonths(data: SpreadsheetData, dateColumn: string): string[] {
   const monthSet = new Set<string>();
 
   data.rows.forEach(row => {
@@ -97,7 +97,7 @@ export function getAvailableMonths(data: CSVData, dateColumn: string): string[] 
 /**
  * データの日付範囲を取得
  */
-export function getDateRange(data: CSVData, dateColumn: string): { min: Date; max: Date } | null {
+export function getDateRange(data: SpreadsheetData, dateColumn: string): { min: Date; max: Date } | null {
   const dates: Date[] = [];
 
   data.rows.forEach(row => {

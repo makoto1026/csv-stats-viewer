@@ -1,8 +1,8 @@
-import { CSVData } from '../types/csv.types';
+import { SpreadsheetData } from '../types/spreadsheet.types';
 import { ColumnStats, ValueFrequency } from '../types/stats.types';
 
 export function calculateColumnStats(
-  data: CSVData,
+  data: SpreadsheetData,
   columnName: string
 ): ColumnStats {
   const values = data.rows.map((row) => row[columnName]);
@@ -101,7 +101,7 @@ export function calculateColumnStats(
 }
 
 export function getValueFrequencies(
-  data: CSVData,
+  data: SpreadsheetData,
   columnName: string,
   limit = 20
 ): ValueFrequency[] {

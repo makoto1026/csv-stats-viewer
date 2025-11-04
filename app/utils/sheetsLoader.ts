@@ -1,4 +1,4 @@
-import { CSVData } from '../types/csv.types';
+import { SpreadsheetData } from '../types/spreadsheet.types';
 import { normalizeRentInData } from './rentNormalizer';
 
 // スプレッドシートID（固定）
@@ -7,7 +7,7 @@ const SPREADSHEET_ID = '1Q-5OdrksGEg7rmxj-uxK_kcbREivBx8udFIf41R3rmA';
 /**
  * GoogleスプレッドシートからCSV形式でデータを取得
  */
-export async function loadFromGoogleSheets(): Promise<CSVData> {
+export async function loadFromGoogleSheets(): Promise<SpreadsheetData> {
   try {
     // Google SheetsをCSV形式でエクスポート
     const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`;
@@ -68,14 +68,14 @@ export async function loadFromGoogleSheets(): Promise<CSVData> {
     // 希望家賃カラムを正規化
     const normalizedRows = normalizeRentInData(rows, headers);
 
-    const csvData: CSVData = {
+    const spreadsheetData: SpreadsheetData = {
       headers,
       rows: normalizedRows,
       fileName: '賃貸フォーム回答統計',
       uploadedAt: new Date(),
     };
 
-    return csvData;
+    return spreadsheetData;
   } catch (error) {
     console.error('スプレッドシート読み込みエラー:', error);
     throw new Error(

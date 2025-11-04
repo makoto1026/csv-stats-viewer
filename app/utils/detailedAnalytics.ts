@@ -1,4 +1,4 @@
-import { CSVData } from '../types/csv.types';
+import { SpreadsheetData } from '../types/spreadsheet.types';
 import { MediaType } from '../types/media.types';
 import {
   MediaDetailedAnalysis,
@@ -6,12 +6,13 @@ import {
   PetTypeDistribution,
 } from '../types/analysis.types';
 import { normalizeMediaName } from './mediaAnalytics';
+import { analyzeRent } from './rentAnalytics';
 
 /**
  * 媒体別の詳細分析を実行
  */
 export function calculateMediaDetailedAnalysis(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   mediaType: MediaType,
   yearMonth: string | 'all-time',
   dateColumn: string = '回答日時',
@@ -53,6 +54,15 @@ export function calculateMediaDetailedAnalysis(
     petColumn
   );
 
+  // 希望家賃分析
+  const rentAnalysis = analyzeRent(
+    csvData,
+    mediaType,
+    yearMonth,
+    dateColumn,
+    mediaColumn
+  );
+
   return {
     mediaType,
     yearMonth,
@@ -64,6 +74,7 @@ export function calculateMediaDetailedAnalysis(
     catCount,
     bothCount,
     unknownCount,
+    rentAnalysis,
   };
 }
 

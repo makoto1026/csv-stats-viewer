@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { CSVData } from '../types/csv.types';
+import { SpreadsheetData } from '../types/spreadsheet.types';
 import { DailyAdCost, MediaType, MEDIA_TYPES } from '../types/media.types';
 import DailyMediaInputTable from './DailyMediaInputTable';
 import MonthlyMediaReportView from './MonthlyMediaReportView';
@@ -12,7 +12,7 @@ import { getDailyLeadCounts, calculateMonthlyOverallReport, calculateAllTimeOver
 import { calculateMediaDetailedAnalysis } from '../utils/detailedAnalytics';
 
 interface MediaAnalyticsViewProps {
-  csvData: CSVData;
+  csvData: SpreadsheetData;
   dateColumn: string;
   availableMonths: string[];
   minDate?: Date;

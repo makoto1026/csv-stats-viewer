@@ -1,4 +1,4 @@
-import { CSVData } from '../types/csv.types';
+import { SpreadsheetData } from '../types/spreadsheet.types';
 import {
   MediaType,
   MEDIA_TYPES,
@@ -22,7 +22,7 @@ export interface DailyLeadCount {
  * 特定の日・媒体のリード数をカウント
  */
 export function countLeadsByMediaAndDate(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   mediaType: MediaType,
   date: string, // YYYY-MM-DD形式
   dateColumn: string,
@@ -74,7 +74,7 @@ export function generateMonthDates(yearMonth: string): string[] {
  * 月全体の日別・媒体別リード数を集計
  */
 export function getDailyLeadCounts(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   mediaType: MediaType,
   yearMonth: string,
   dateColumn: string,
@@ -92,7 +92,7 @@ export function getDailyLeadCounts(
  * スプレッドシートの「何を見て知った?」列から媒体別のリード数をカウント
  */
 export function countLeadsByMedia(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   mediaType: MediaType,
   yearMonth: string,
   dateColumn: string,
@@ -126,7 +126,7 @@ export function countLeadsByMedia(
  * 媒体別の月次レポートを計算
  */
 export function calculateMonthlyMediaReport(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   mediaType: MediaType,
   yearMonth: string,
   dateColumn: string,
@@ -168,7 +168,7 @@ export function calculateMonthlyMediaReport(
  * 全媒体の月次レポートを計算
  */
 export function calculateMonthlyOverallReport(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   yearMonth: string,
   dateColumn: string,
   mediaColumn: string = '何を見て知った？'
@@ -232,7 +232,7 @@ export function normalizeMediaName(value: string): MediaType | null {
  * 全期間の媒体別リード数をカウント
  */
 export function countAllTimeLeadsByMedia(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   mediaType: MediaType,
   mediaColumn: string = '何を見て知った？'
 ): number {
@@ -253,7 +253,7 @@ export function countAllTimeLeadsByMedia(
  * 全期間の媒体別レポートを計算
  */
 export function calculateAllTimeMediaReport(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   mediaType: MediaType,
   mediaColumn: string = '何を見て知った？'
 ): AllTimeMediaReport {
@@ -293,7 +293,7 @@ export function calculateAllTimeMediaReport(
  * 全期間の全媒体レポートを計算
  */
 export function calculateAllTimeOverallReport(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   dateColumn: string,
   mediaColumn: string = '何を見て知った？'
 ): AllTimeOverallReport {

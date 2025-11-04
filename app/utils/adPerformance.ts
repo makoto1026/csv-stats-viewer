@@ -1,11 +1,11 @@
-import { CSVData } from '../types/csv.types';
+import { SpreadsheetData } from '../types/spreadsheet.types';
 import { AdCost, AdPerformance } from '../types/advertisement.types';
 
 /**
  * 指定期間内の回答数をカウント
  */
 export function countResponsesInPeriod(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   dateColumn: string,
   startDate: Date,
   endDate: Date
@@ -32,7 +32,7 @@ export function countResponsesInPeriod(
  * 日別の回答数を取得
  */
 export function getResponseCountsByDate(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   dateColumn: string,
   startDate: Date,
   endDate: Date
@@ -63,7 +63,7 @@ export function getResponseCountsByDate(
  * 広告費用対効果を計算
  */
 export function calculateAdPerformance(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   dateColumn: string,
   adCost: AdCost
 ): AdPerformance {
@@ -104,7 +104,7 @@ export function calculateAdPerformance(
  * 複数の広告費用の合計パフォーマンスを計算
  */
 export function calculateTotalAdPerformance(
-  csvData: CSVData,
+  csvData: SpreadsheetData,
   dateColumn: string,
   adCosts: AdCost[]
 ): AdPerformance | null {

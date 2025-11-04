@@ -1,7 +1,8 @@
 'use client';
 
 import { MediaDetailedAnalysis } from '../types/analysis.types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import RentSummarySection from './RentSummarySection';
 
 interface DetailedAnalysisViewProps {
   analysis: MediaDetailedAnalysis;
@@ -115,6 +116,7 @@ export default function DetailedAnalysisView({ analysis }: DetailedAnalysisViewP
                   cx="50%"
                   cy="50%"
                   labelLine={false}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   label={(props: any) => {
                     const { name, percent } = props;
                     return `${name} ${(percent * 100).toFixed(0)}%`;
@@ -172,6 +174,11 @@ export default function DetailedAnalysisView({ analysis }: DetailedAnalysisViewP
           </div>
         </div>
       </div>
+
+      {/* 希望家賃分析（新規追加） */}
+      {analysis.rentAnalysis && (
+        <RentSummarySection rentAnalysis={analysis.rentAnalysis} />
+      )}
     </div>
   );
 }

@@ -5,7 +5,8 @@ import Sidebar from './components/Sidebar';
 import StatsView from './components/StatsView';
 import DateFilterPanel from './components/DateFilterPanel';
 import MediaAnalyticsView from './components/MediaAnalyticsView';
-import { CSVData } from './types/csv.types';
+import ResponseAnalyticsView from './components/ResponseAnalyticsView';
+import { SpreadsheetData } from './types/spreadsheet.types';
 import { DateFilter } from './types/filter.types';
 import {
   detectDateColumn,
@@ -16,10 +17,11 @@ import {
 import { loadFromGoogleSheets } from './utils/sheetsLoader';
 
 export default function Home() {
-  const [csvData, setCsvData] = useState<CSVData | null>(null);
+  const [spreadsheetData, setSpreadsheetData] = useState<SpreadsheetData | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<DateFilter>({ period: 'all' });
   const [showMediaAnalytics, setShowMediaAnalytics] = useState(false);
+  const [showResponseAnalytics, setShowResponseAnalytics] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +31,7 @@ export default function Home() {
     setError(null);
     try {
       const data = await loadFromGoogleSheets();
-      setCsvData(data);
+      setSpreadsheetData(data);
       if (data.headers.length > 0) {
         setSelectedColumn(data.headers[0]);
       }
@@ -49,6 +51,7 @@ export default function Home() {
     setSelectedColumn(column);
     // サイドバークリック時にパネルを閉じる
     setShowMediaAnalytics(false);
+    setShowResponseAnalytics(false);
   };
 
   const handleReload = () => {
@@ -57,26 +60,26 @@ export default function Home() {
 
   // 日付カラムの検出
   const dateColumn = useMemo(() => {
-    return csvData ? detectDateColumn(csvData) : null;
-  }, [csvData]);
+    return spreadsheetData ? detectDateColumn(spreadsheetData) : null;
+  }, [spreadsheetData]);
 
   // フィルタリングされたデータ
   const filteredData = useMemo(() => {
-    if (!csvData || !dateColumn) return csvData;
-    return filterDataByPeriod(csvData, dateColumn, dateFilter);
-  }, [csvData, dateColumn, dateFilter]);
+    if (!spreadsheetData || !dateColumn) return spreadsheetData;
+    return filterDataByPeriod(spreadsheetData, dateColumn, dateFilter);
+  }, [spreadsheetData, dateColumn, dateFilter]);
 
   // 利用可能な月のリスト
   const availableMonths = useMemo(() => {
-    if (!csvData || !dateColumn) return [];
-    return getAvailableMonths(csvData, dateColumn);
-  }, [csvData, dateColumn]);
+    if (!spreadsheetData || !dateColumn) return [];
+    return getAvailableMonths(spreadsheetData, dateColumn);
+  }, [spreadsheetData, dateColumn]);
 
   // 日付範囲
   const dateRange = useMemo(() => {
-    if (!csvData || !dateColumn) return null;
-    return getDateRange(csvData, dateColumn);
-  }, [csvData, dateColumn]);
+    if (!spreadsheetData || !dateColumn) return null;
+    return getDateRange(spreadsheetData, dateColumn);
+  }, [spreadsheetData, dateColumn]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -108,22 +111,22 @@ export default function Home() {
             </div>
           </div>
         </div>
-      ) : csvData ? (
+      ) : spreadsheetData ? (
         <div className="h-screen flex flex-col">
           {/* ヘッダー */}
           <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {csvData.fileName}
+                  {spreadsheetData.fileName}
                 </h1>
                 <div className="flex gap-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
                   <span>
-                    データ行数: {filteredData?.rows.length.toLocaleString() || 0} / {csvData.rows.length.toLocaleString()}
+                    データ行数: {filteredData?.rows.length.toLocaleString() || 0} / {spreadsheetData.rows.length.toLocaleString()}
                   </span>
-                  <span>カラム数: {csvData.headers.length}</span>
+                  <span>カラム数: {spreadsheetData.headers.length}</span>
                   <span>
-                    アップロード: {csvData.uploadedAt.toLocaleString('ja-JP')}
+                    取得日時: {spreadsheetData.uploadedAt.toLocaleString('ja-JP')}
                   </span>
                   {dateColumn && (
                     <span className="text-blue-600 dark:text-blue-400">
@@ -134,18 +137,34 @@ export default function Home() {
               </div>
               <div className="flex gap-2">
                 {dateColumn && (
-                  <button
-                    onClick={() => {
-                      setShowMediaAnalytics(!showMediaAnalytics);
-                    }}
-                    className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                      showMediaAnalytics
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    媒体別分析
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowMediaAnalytics(!showMediaAnalytics);
+                        setShowResponseAnalytics(false);
+                      }}
+                      className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
+                        showMediaAnalytics
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      媒体別分析
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowResponseAnalytics(!showResponseAnalytics);
+                        setShowMediaAnalytics(false);
+                      }}
+                      className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
+                        showResponseAnalytics
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      回答数分析
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={handleReload}
@@ -161,7 +180,7 @@ export default function Home() {
           {/* メインコンテンツ */}
           <div className="flex flex-1 overflow-hidden">
             <Sidebar
-              headers={csvData.headers}
+              headers={spreadsheetData.headers}
               selectedColumn={selectedColumn}
               onSelectColumn={handleSelectColumn}
             />
@@ -169,9 +188,9 @@ export default function Home() {
             <div className="flex-1 overflow-y-auto p-6">
               <div className="max-w-6xl mx-auto space-y-6">
                 {/* 媒体別分析パネル */}
-                {showMediaAnalytics && dateColumn && csvData && (
+                {showMediaAnalytics && dateColumn && spreadsheetData && (
                   <MediaAnalyticsView
-                    csvData={csvData}
+                    csvData={spreadsheetData}
                     dateColumn={dateColumn}
                     availableMonths={availableMonths}
                     minDate={dateRange?.min}
@@ -179,8 +198,16 @@ export default function Home() {
                   />
                 )}
 
+                {/* 回答数分析パネル */}
+                {showResponseAnalytics && dateColumn && spreadsheetData && (
+                  <ResponseAnalyticsView
+                    csvData={spreadsheetData}
+                    dateColumn={dateColumn}
+                  />
+                )}
+
                 {/* 期間フィルター */}
-                {!showMediaAnalytics && dateColumn && (
+                {!showMediaAnalytics && !showResponseAnalytics && dateColumn && (
                   <DateFilterPanel
                     filter={dateFilter}
                     availableMonths={availableMonths}
@@ -191,7 +218,7 @@ export default function Home() {
                 )}
 
                 {/* 統計ビュー */}
-                {!showMediaAnalytics && selectedColumn && filteredData && (
+                {!showMediaAnalytics && !showResponseAnalytics && selectedColumn && filteredData && (
                   <StatsView data={filteredData} selectedColumn={selectedColumn} />
                 )}
               </div>

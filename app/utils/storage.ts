@@ -1,18 +1,18 @@
-import { CSVData } from '../types/csv.types';
+import { SpreadsheetData } from '../types/spreadsheet.types';
 
 const STORAGE_KEY = 'csv-stats-viewer-data';
 const STORAGE_VERSION = '1.0';
 
 interface StorageData {
   version: string;
-  csvData: CSVData;
+  csvData: SpreadsheetData;
   savedAt: string;
 }
 
 /**
  * CSVデータをlocalStorageに保存
  */
-export function saveToStorage(csvData: CSVData): boolean {
+export function saveToStorage(csvData: SpreadsheetData): boolean {
   try {
     const storageData: StorageData = {
       version: STORAGE_VERSION,
@@ -39,7 +39,7 @@ export function saveToStorage(csvData: CSVData): boolean {
 /**
  * localStorageからCSVデータを読み込み
  */
-export function loadFromStorage(): CSVData | null {
+export function loadFromStorage(): SpreadsheetData | null {
   try {
     const jsonString = localStorage.getItem(STORAGE_KEY);
 

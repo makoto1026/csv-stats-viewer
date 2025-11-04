@@ -1,13 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CSVData } from '../types/csv.types';
+import { SpreadsheetData } from '../types/spreadsheet.types';
 import { calculateColumnStats, getValueFrequencies } from '../utils/statsCalculator';
 import ValueDistributionChart from './ValueDistributionChart';
 import DateTimeStatsChart from './DateTimeStatsChart';
 
 interface StatsViewProps {
-  data: CSVData;
+  data: SpreadsheetData;
   selectedColumn: string;
 }
 

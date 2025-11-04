@@ -1,4 +1,5 @@
 import { MediaType } from './media.types';
+import { RentAnalysis } from './rent.types';
 
 // 時間帯分析
 export interface HourlyDistribution {
@@ -31,6 +32,9 @@ export interface MediaDetailedAnalysis {
   catCount: number; // 猫を飼っている人
   bothCount: number; // 両方飼っている人
   unknownCount: number; // 不明
+
+  // 希望家賃分析
+  rentAnalysis: RentAnalysis | null; // 希望家賃カラムがない場合はnull
 }
 
 // フィルタ条件
