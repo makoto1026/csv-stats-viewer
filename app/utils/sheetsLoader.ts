@@ -71,7 +71,7 @@ export async function loadFromGoogleSheets(): Promise<SpreadsheetData> {
     const spreadsheetData: SpreadsheetData = {
       headers,
       rows: normalizedRows,
-      fileName: '賃貸フォーム回答統計',
+      fileName: '分析くん',
       uploadedAt: new Date(),
     };
 

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "賃貸フォーム回答統計",
+  title: "分析くん",
   description: "賃貸フォームの回答を集計・可視化するアプリケーションです。",
 };
 
